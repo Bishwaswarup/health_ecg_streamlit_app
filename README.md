@@ -44,3 +44,5 @@ summary is disabled.
 
 The TensorFlow CNN is optional at runtime: when it cannot load, the app clearly
 labels and uses its non-AI synthetic-template matcher instead.
+
+The optional summary uses the stable `gemini-3.6-flash` model.

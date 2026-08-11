@@ -1,7 +1,7 @@
 pandas>=2.0
 numpy>=1.24
 matplotlib>=3.7
-google-genai
+google-genai>=1.0
 streamlit>=1.40
 # Optional but recommended: enables the bundled synthetic-ECG CNN in ecg_ai.py.
 tensorflow>=2.15

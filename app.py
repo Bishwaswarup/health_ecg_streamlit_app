@@ -7,6 +7,7 @@ the model workflow.
 
 from __future__ import annotations
 
+import logging
 import random
 
 import matplotlib.pyplot as plt
@@ -25,8 +26,20 @@ from ecg_ai import (
 from trainer_generator.generator import ECGGenerator
 from trainer_generator.rhythms import available_rhythms, recommended_heart_rate_range
 
+logger = logging.getLogger(__name__)
 
 st.set_page_config(page_title="Synthetic ECG Explorer", page_icon="❤️", layout="wide")
+st.markdown(
+    """<style>
+    .stApp { background: radial-gradient(circle at top right, #1d3557 0%, #0b1020 42%, #070b14 100%); }
+    [data-testid="stHeader"] { background: rgba(7, 11, 20, 0.78); }
+    [data-testid="stMetric"] { background: rgba(24, 35, 58, 0.88); border: 1px solid #2a4168; border-radius: 14px; padding: 16px; }
+    [data-testid="stTabs"] [data-baseweb="tab-list"] { gap: 10px; }
+    [data-testid="stTabs"] button { border-radius: 10px 10px 0 0; }
+    .stButton > button { border-radius: 10px; font-weight: 650; }
+    </style>""",
+    unsafe_allow_html=True,
+)
 
 
 def get_api_key() -> str | None:
@@ -37,13 +50,14 @@ def get_api_key() -> str | None:
         return None
 
 
-def vital_summary(temperature_c: float, spo2_percent: int, heart_rate_bpm: int) -> str:
+def vital_summary(temperature_c: float, spo2_percent: int, heart_rate_bpm: int) -> tuple[str, bool]:
     """Return a bounded, non-diagnostic educational summary."""
     api_key = get_api_key()
     if not api_key:
         return (
             "AI summary is not configured. Add `GEMINI_API_KEY` to the app's "
-            "Streamlit secrets to enable it. These values are not stored by this app."
+            "Streamlit secrets to enable it. These values are not stored by this app.",
+            False,
         )
     try:
         from google import genai
@@ -55,9 +69,15 @@ and urgent symptoms require local emergency care. Use plain language."""
         response = genai.Client(api_key=api_key).models.generate_content(
             model="gemini-3.6-flash", contents=prompt
         )
-        return " ".join((response.text or "No summary was returned.").split()[:55])
-    except Exception as error:
-        return f"AI summary is temporarily unavailable ({type(error).__name__})."
+        return " ".join((response.text or "No summary was returned.").split()[:55]), True
+    except Exception:
+        logger.exception("Gemini summary request failed")
+        return (
+            "The AI summary could not be generated. Check that `GEMINI_API_KEY` "
+            "is a valid Gemini API key in Streamlit Secrets and that its project "
+            "has access to Gemini 3.6 Flash. See the app logs for the exact error.",
+            False,
+        )
 
 
 @st.cache_data(show_spinner=False)
@@ -96,7 +116,8 @@ with vitals_tab:
         summarize = st.form_submit_button("Generate educational AI summary", type="primary")
     if summarize:
         with st.spinner("Creating a cautious summary…"):
-            st.info(vital_summary(float(temperature), int(spo2), int(bpm)))
+            summary, succeeded = vital_summary(float(temperature), int(spo2), int(bpm))
+        (st.success if succeeded else st.error)(summary)
         st.caption("This summary is generated from values you entered manually; it cannot validate sensor accuracy or make a diagnosis.")
 
 with ecg_tab:
@@ -117,7 +138,7 @@ with ecg_tab:
         figure = draw_result(
             ecg["Time"].to_numpy(), ecg["Voltage"].to_numpy(), chosen_label, rate, prediction, top_count=5
         )
-    st.pyplot(figure, clear_figure=True, use_container_width=True)
+    st.pyplot(figure, clear_figure=True, width="stretch")
     plt.close(figure)
     one, two, three = st.columns(3)
     one.metric("Generated label", friendly_label(chosen_label))
