@@ -67,7 +67,7 @@ Inputs: temperature {temperature_c:.1f} °C, SpO2 {spo2_percent}%, heart rate {h
 Do not diagnose, claim normality, or recommend treatment. Clearly state that a measurement can be inaccurate
 and urgent symptoms require local emergency care. Use plain language."""
         response = genai.Client(api_key=api_key).models.generate_content(
-            model="gemini-3.6-flash", contents=prompt
+            model="gemini-3.1-flash-lite", contents=prompt
         )
         return " ".join((response.text or "No summary was returned.").split()[:55]), True
     except Exception:
