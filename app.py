@@ -66,7 +66,11 @@ def vital_summary(temperature_c: float, spo2_percent: int, heart_rate_bpm: int) 
 Inputs: temperature {temperature_c:.1f} °C, SpO2 {spo2_percent}%, heart rate {heart_rate_bpm} bpm.
 Do not diagnose, claim normality, or recommend treatment. Clearly state that a measurement can be inaccurate
 and urgent symptoms require local emergency care. Use plain language."""
-        response = genai.Client(api_key=api_key).models.generate_content(
+        # Keep the client referenced until after the request completes. The
+        # previous inline expression created a temporary client that could be
+        # closed by the runtime before its models service sent the request.
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
             model="gemini-3.1-flash-lite", contents=prompt
         )
         return " ".join((response.text or "No summary was returned.").split()[:55]), True
@@ -75,7 +79,7 @@ and urgent symptoms require local emergency care. Use plain language."""
         return (
             "The AI summary could not be generated. Check that `GEMINI_API_KEY` "
             "is a valid Gemini API key in Streamlit Secrets and that its project "
-            "has access to Gemini 3.6 Flash. See the app logs for the exact error.",
+            "has access to the configured Gemini model. See the app logs for the exact error.",
             False,
         )
 
