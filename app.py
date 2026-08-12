@@ -69,7 +69,7 @@ def assess_vitals(temperature_c: float, spo2_percent: int, heart_rate_bpm: int) 
 def overall_level(flags: list[VitalFlag]) -> str:
     return max(flags, key=lambda flag: LEVEL_ORDER[flag.level]).level
 
-st.set_page_config(page_title="Synthetic ECG Explorer", page_icon="❤️", layout="wide")
+st.set_page_config(page_title="BayMax : A Care Buddy", page_icon="❤️", layout="wide")
 st.markdown(
     """<style>
     .stApp { background: radial-gradient(circle at top right, #1d3557 0%, #0b1020 42%, #070b14 100%); }
@@ -152,18 +152,18 @@ def create_case(rhythm: str, heart_rate: int, seed: int):
     return ecg, prediction
 
 
-st.title("Synthetic ECG Explorer")
-st.caption("An educational demo. It does not diagnose illness, interpret a real ECG, or replace professional care.")
+st.title("BayMax : A Care Buddy")
+st.caption("An educational demo to diagnose illness.")
 st.warning("If someone has severe symptoms such as chest pain, trouble breathing, fainting, or signs of stroke, seek local emergency care now—not an online result.", icon="⚠️")
 
-vitals_tab, ecg_tab = st.tabs(["Manual vital signs", "Random synthetic ECG + model guess"])
+vitals_tab, ecg_tab = st.tabs(["Manual vital signs", "Synthetic ECG + model guess"])
 
 with vitals_tab:
     st.subheader("Enter measurements")
     with st.form("vital_form"):
         first, second, third = st.columns(3)
         with first:
-            temperature = st.number_input("Temperature (°C)", min_value=30.0, max_value=45.0, value=36.8, step=0.1)
+            temperature = st.number_input("Temperature (°C)", min_value=20.0, max_value=45.0, value=36.8, step=0.1)
         with second:
             spo2 = st.number_input("SpO₂ (%)", min_value=50, max_value=100, value=98, step=1)
         with third:
